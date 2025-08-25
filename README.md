@@ -3,7 +3,9 @@ Responsive PHP Gallery with directory listing, EXIF info and slideshow for photo
 
 
 Built by me and Chat-GPT
+
 The files are in Hungarian, but you can change it as you like.
+
 If PHP is not yet installed on your web server: https://www.php.net/downloads.php
 
 
