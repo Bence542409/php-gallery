@@ -12,10 +12,22 @@ $images_json = json_encode(array_map(function($f){
             if(is_scalar($value) || is_array($value)) $exifArray[$key] = $value;
         }
     }
+
+    // IPTC címkék (alany neve)
+    $personName = '—';
+    $size = getimagesize($f, $info);
+    if(isset($info['APP13'])){
+        $iptc = iptcparse($info['APP13']);
+        if(isset($iptc["2#025"]) && count($iptc["2#025"])>0){
+            $personName = implode(', ', $iptc["2#025"]);
+        }
+    }
+
     return [
         'filename'=>$f,
         'size'=>filesize($f),
-        'exif'=>$exifArray
+        'exif'=>$exifArray,
+        'person'=>$personName // <-- ide kerül az alany neve
     ];
 }, $files));
 ?>
@@ -274,11 +286,15 @@ function showInfo(){
 
     // Zársebesség
     let shutter = img.exif['ExposureTime'] ? img.exif['ExposureTime'] + "s" : '—';
+    
+    // Alany neve
+    let person = img.person || '—';
 
     let html = `<p><strong>Album:</strong> ${parentDir}</p>`;
     html += `<p><strong>Fájlnév:</strong> ${img.filename}</p>`;
     html += `<p><strong>Készítés dátuma:</strong> ${date}</p>`;
     html += `<p><strong>Alkotó:</strong> ${img.exif['Artist'] || '—'}</p>`;
+    html += `<p><strong>Alany:</strong> ${person}</p>`;
     html += `<p><strong>Fényképezőgép:</strong> ${img.exif['Model'] || '—'}</p>`;
     html += `<p><strong>Objektív:</strong> ${img.exif['UndefinedTag:0xA434'] || '—'}</p>`;
     html += `<p><strong>Felbontás:</strong> ${(img.exif['COMPUTED']?.Width && img.exif['COMPUTED']?.Height) ? img.exif['COMPUTED'].Width + "×" + img.exif['COMPUTED'].Height : '—'}</p>`;
@@ -286,7 +302,7 @@ function showInfo(){
     html += `<p><strong>Zársebesség:</strong> ${shutter}</p>`;
     html += `<p><strong>Rekeszérték:</strong> ${img.exif['COMPUTED']?.ApertureFNumber || '—'}</p>`;
     html += `<p><strong>Copyright:</strong> ${img.exif['Copyright'] || '—'}</p>`;
-    html += `<p><strong>Fájlméret:</strong> ${Math.round(img.size/1024)} KB</p>`;
+    html += `<p><strong>Fájlméret:</strong> ${(img.size/1024/1024).toFixed(2)} MB</p>`;
     html += `<p><strong>Software:</strong> ${img.exif['Software'] || '—'}</p>`;
 
     // GPS

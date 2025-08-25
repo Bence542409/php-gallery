@@ -5,6 +5,10 @@ $files = array_filter($files, fn($f) => is_file($f) && preg_match('/\.(jpg|mp4)$
 sort($files, SORT_NATURAL | SORT_FLAG_CASE);
 $exifAvailable = function_exists('exif_read_data');
 
+$totalFiles = count($files);
+$totalSizeBytes = array_sum(array_map('filesize', $files));
+$totalSizeGB = round($totalSizeBytes / (1024**3), 2); // GB-ra konvertálva
+
 function gps2Num($coordPart){
     $parts = explode('/', $coordPart);
     return count($parts)<=1 ? (float)$parts[0] : (float)$parts[0]/(float)$parts[1];
@@ -37,6 +41,18 @@ th{background:#f2f2f2;}
 a.file-link{color:#007BFF;text-decoration:none;}
 a.file-link:hover{text-decoration:underline;}
 tr.hidden{display:none;}
+    
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; /* mobilon törhet sorra, ha nincs hely */
+}
+.header-stats {
+    font-size: 0.9em;
+    color: #666;
+    white-space: nowrap;
+}
 
 /* Mobil nézet – minden adat egymás alatt, fájlok közötti vonallal */
 @media (max-width:768px){
@@ -79,11 +95,24 @@ tr.hidden{display:none;}
     .file-row:last-child::after{
         display:none;
     }
+    .title {
+        font-size: 27px;
+    }
+    .header-stats {
+        display: none;
+    }
 }
 </style>
 </head>
 <body>
-<h1><?= htmlspecialchars($parentDirName) ?></h1>
+<div class="header-container">
+    <h1 class="title"><?= htmlspecialchars($parentDirName) ?></h1>
+    <?php if($totalFiles > 0): ?>
+    <div class="header-stats">
+        Fájlok: <?= $totalFiles ?> | Méret: <?= $totalSizeGB ?> GB
+    </div>
+    <?php endif; ?>
+</div>
 
 <div class="controls">
     <a href="download.php" target="_blank">Letöltés</a>
@@ -98,7 +127,7 @@ tr.hidden{display:none;}
     <th>Dátum</th>
     <th>Alkotó</th>
     <th>Fényképezőgép</th>
-    <th>Objektív</th>
+    <th>Alany</th>
     <th>GPS</th>
 </tr>
 </thead>
@@ -116,7 +145,14 @@ tr.hidden{display:none;}
         }
         $artist = $exif['Artist'] ?? '&mdash;';
         $camera = $exif['Model'] ?? '&mdash;';
-        $lens = $exif['UndefinedTag:0xA434'] ?? '&mdash;';
+        $tags = '&mdash;';
+        $data = getimagesize($file, $info);
+        if(isset($info['APP13'])){
+            $iptc = iptcparse($info['APP13']);
+            if(isset($iptc["2#025"])){ // 2#025 = Keywords
+                $tags = implode(', ', $iptc["2#025"]);
+            }
+        }
         if(isset($exif['GPSLatitude'],$exif['GPSLongitude'],$exif['GPSLatitudeRef'],$exif['GPSLongitudeRef'])){
             $lat=getGps($exif['GPSLatitude'],$exif['GPSLatitudeRef']);
             $lon=getGps($exif['GPSLongitude'],$exif['GPSLongitudeRef']);
@@ -129,7 +165,7 @@ tr.hidden{display:none;}
     <td data-label="Dátum"><?= $date ?></td>
     <td data-label="Alkotó"><?= $artist ?></td>
     <td data-label="Fényképezőgép"><?= $camera ?></td>
-    <td data-label="Objektív"><?= $lens ?></td>
+    <td data-label="Alany"><?= $tags ?></td>
     <td data-label="GPS"><?= $gps ?></td>
 </tr>
 <?php endforeach; ?>
