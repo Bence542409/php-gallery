@@ -2,7 +2,7 @@
 Responsive PHP Gallery with directory listing, EXIF info and slideshow for photographers.
 
 
-Built by me and Chat-GPT.
+Built by me and ChatGPT.
 
 The files are in Hungarian, but you can change it as you like.
 
