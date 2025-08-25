@@ -8,7 +8,6 @@ The files are in Hungarian, but you can change it as you like.
 
 If PHP is not yet installed on your web server: https://www.php.net/downloads.php
 
-
 index.php -->
 - lists .jpg and .mp4 files from your directory with EXIF data (if available)
 - reads the name of the parent directory
