@@ -151,6 +151,21 @@ button:hover{background:#555;}
 </div>
 
 <script>
+    
+function getGps(coord, hemi){
+    function gps2Num(coordPart){
+        const parts = coordPart.split('/');
+        if(parts.length <= 1) return parseFloat(parts[0]);
+        return parseFloat(parts[0]) / parseFloat(parts[1]);
+    }
+
+    const degrees = coord.length > 0 ? gps2Num(coord[0]) : 0;
+    const minutes = coord.length > 1 ? gps2Num(coord[1]) : 0;
+    const seconds = coord.length > 2 ? gps2Num(coord[2]) : 0;
+    let dec = degrees + (minutes/60) + (seconds/3600);
+    return (hemi === 'S' || hemi === 'W') ? dec * -1 : dec;
+}
+    
 const images = <?=$images_json?>;
 const BATCH_SIZE = 50;
 let index=0,
@@ -310,7 +325,7 @@ function showInfo(){
     if(img.exif['GPSLatitude'] && img.exif['GPSLongitude'] && img.exif['GPSLatitudeRef'] && img.exif['GPSLongitudeRef']){
         const lat = getGps(img.exif['GPSLatitude'], img.exif['GPSLatitudeRef']);
         const lon = getGps(img.exif['GPSLongitude'], img.exif['GPSLongitudeRef']);
-        gps = lat + ", " + lon;
+        gps = `<a href="https://www.google.com/maps/search/?api=1&query=${lat},${lon}" target="_blank" style="color:dodgerblue;text-decoration:none;">${lat}, ${lon}</a>`;
     }
     html += `<p><strong>GPS:</strong> ${gps}</p>`;
 

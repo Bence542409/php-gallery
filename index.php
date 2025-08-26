@@ -156,7 +156,9 @@ tr.hidden{display:none;}
         if(isset($exif['GPSLatitude'],$exif['GPSLongitude'],$exif['GPSLatitudeRef'],$exif['GPSLongitudeRef'])){
             $lat=getGps($exif['GPSLatitude'],$exif['GPSLatitudeRef']);
             $lon=getGps($exif['GPSLongitude'],$exif['GPSLongitudeRef']);
-            $gps="{$lat}, {$lon}";
+            $gps = '<a href="https://www.google.com/maps/search/?api=1&query='
+           . $lat . ',' . $lon . '" target="_blank" style="color:dodgerblue;text-decoration:none;">'
+           . $lat . ', ' . $lon . '</a>';
         }
     }
 ?>
