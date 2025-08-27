@@ -20,7 +20,7 @@
   <li>press arrow keys or the buttons to change image</li>
   <li>press 'L' or the button to download the current image</li>
   <li>press 'G' or the button to reveal the gallery</li>
-  <li>press 'I" or the image to reveal the EXIF info</li>
+  <li>press 'I' or the image to reveal the EXIF info</li>
 </ul>
 <p>download.php --></p>
 <ul>
