@@ -38,7 +38,7 @@ body{font-family:Arial,sans-serif;padding:20px;}
 table{width:100%;border-collapse:collapse;}
 th, td{text-align:left;padding:8px 10px;border-bottom:1px solid #ddd;}
 th{background:#f2f2f2;}
-a.file-link{color:#007BFF;text-decoration:none;}
+a.file-link{color:dodgerblue;text-decoration:none;}
 a.file-link:hover{text-decoration:underline;}
 tr.hidden{display:none;}
     
@@ -129,38 +129,72 @@ tr.hidden{display:none;}
     <th>Fényképezőgép</th>
     <th>Alany</th>
     <th>GPS</th>
+    <th>Értékelés</th>
 </tr>
 </thead>
 <tbody>
 <?php foreach($files as $file):
     $date=$artist=$camera=$lens=$gps='&mdash;';
-    if($exifAvailable){
-        $exif=@exif_read_data($file,'IFD0,EXIF,GPS');
-        if(isset($exif['DateTimeOriginal'])){
-            $dateObj = DateTime::createFromFormat('Y:m:d H:i:s', $exif['DateTimeOriginal']);
-            $date = $dateObj ? $dateObj->format('Y-m-d H:i:s') : '&mdash;';
-        } elseif(isset($exif['DateTime'])){
-            $dateObj = DateTime::createFromFormat('Y:m:d H:i:s', $exif['DateTime']);
-            $date = $dateObj ? $dateObj->format('Y-m-d H:i:s') : '&mdash;';
-        }
-        $artist = $exif['Artist'] ?? '&mdash;';
-        $camera = $exif['Model'] ?? '&mdash;';
-        $tags = '&mdash;';
-        $data = getimagesize($file, $info);
-        if(isset($info['APP13'])){
-            $iptc = iptcparse($info['APP13']);
-            if(isset($iptc["2#025"])){ // 2#025 = Keywords
-                $tags = implode(', ', $iptc["2#025"]);
+    $rating = '&mdash;'; // szám formátum
+    $ratingStar = '&mdash;'; // csillagok
+
+if ($exifAvailable){
+    $exif=@exif_read_data($file,'IFD0,EXIF,GPS');
+
+    // Dátum
+    if(isset($exif['DateTimeOriginal'])){
+        $dateObj = DateTime::createFromFormat('Y:m:d H:i:s', $exif['DateTimeOriginal']);
+        $date = $dateObj ? $dateObj->format('Y-m-d H:i:s') : '&mdash;';
+    } elseif(isset($exif['DateTime'])){
+        $dateObj = DateTime::createFromFormat('Y:m:d H:i:s', $exif['DateTime']);
+        $date = $dateObj ? $dateObj->format('Y-m-d H:i:s') : '&mdash;';
+    }
+
+    // Alkotó
+    $artist = $exif['Artist'] ?? '&mdash;';
+
+    // Fényképezőgép (marad eredeti)
+    $camera = $exif['Model'] ?? '&mdash;';
+
+    // XMP Rating kiolvasása
+        $xmpData = file_get_contents($file);
+        if (preg_match('/<\?xpacket.*?x:xmpmeta.*?>(.*?)<\/x:xmpmeta>/si', $xmpData, $matches)) {
+            $xmp = $matches[0];
+            if (preg_match('/xmp:Rating="(\d+)"/', $xmp, $ratingMatch)) {
+                $rating = (int)$ratingMatch[1];
+                $ratingStar = str_repeat('★', $rating);
             }
         }
-        if(isset($exif['GPSLatitude'],$exif['GPSLongitude'],$exif['GPSLatitudeRef'],$exif['GPSLongitudeRef'])){
-            $lat=getGps($exif['GPSLatitude'],$exif['GPSLatitudeRef']);
-            $lon=getGps($exif['GPSLongitude'],$exif['GPSLongitudeRef']);
-            $gps = '<a href="https://www.google.com/maps/search/?api=1&query='
-           . $lat . ',' . $lon . '" target="_blank" style="color:dodgerblue;text-decoration:none;">'
-           . $lat . ', ' . $lon . '</a>';
+    
+    if (isset($rating) && $rating !== '&mdash;') {
+    $filled = (int)$rating;
+    $empty = 5 - $filled;
+    $ratingStar = str_repeat('★', $filled) . str_repeat('☆', $empty);
+    } else {
+        $ratingStar = '☆☆☆☆☆'; // ha nincs értékelés
+    }
+
+
+    // Alany (tags)
+    $tags = '&mdash;';
+    $data = getimagesize($file, $info);
+    if(isset($info['APP13'])){
+        $iptc = iptcparse($info['APP13']);
+        if(isset($iptc["2#025"])){
+            $tags = implode(', ', $iptc["2#025"]);
         }
     }
+
+    // GPS
+    if(isset($exif['GPSLatitude'],$exif['GPSLongitude'],$exif['GPSLatitudeRef'],$exif['GPSLongitudeRef'])){
+        $lat=getGps($exif['GPSLatitude'],$exif['GPSLatitudeRef']);
+        $lon=getGps($exif['GPSLongitude'],$exif['GPSLongitudeRef']);
+        $gps = '<a href="https://www.google.com/maps/search/?api=1&query='
+       . $lat . ',' . $lon . '" target="_blank" style="color:dodgerblue;text-decoration:none;">'
+       . $lat . ', ' . $lon . '</a>';
+    }
+}
+
 ?>
 <tr class="file-row">
     <td data-label="Fájl"><a href="<?= htmlspecialchars($file) ?>" target="_blank" class="file-link"><?= htmlspecialchars($file) ?></a></td>
@@ -169,49 +203,139 @@ tr.hidden{display:none;}
     <td data-label="Fényképezőgép"><?= $camera ?></td>
     <td data-label="Alany"><?= $tags ?></td>
     <td data-label="GPS"><?= $gps ?></td>
+    <td data-label="Értékelés" data-rating="<?= $rating ?>"><?= $ratingStar ?></td>
 </tr>
 <?php endforeach; ?>
 </tbody>
 </table>
 
 <script>
-const searchInput=document.getElementById('search');
-searchInput.addEventListener('input',()=>{
-    const filter=searchInput.value.trim().toLowerCase();
-    const rows=document.querySelectorAll('.file-row');
+const searchInput = document.getElementById('search');
 
-    // Ha van "Kulcs: Érték" forma
-    let field=null, value=null;
-    const match=filter.match(/^(\w+)\s*:\s*(.+)$/);
-    if(match){
-        field=match[1];
-        value=match[2];
-    }
+searchInput.addEventListener('input', () => {
+    const filter = searchInput.value.trim();
+    const rows = document.querySelectorAll('.file-row');
 
-    rows.forEach(row=>{
-        let visible=true;
-        if(field && value){
-            // keresés adott oszlopban
-            let cell=null;
-            switch(field){
-                case 'file': cell=row.querySelector('td[data-label="Fájl"]'); break;
-                case 'date': cell=row.querySelector('td[data-label="Dátum"]'); break;
-                case 'creator': cell=row.querySelector('td[data-label="Alkotó"]'); break;
-                case 'camera': cell=row.querySelector('td[data-label="Fényképezőgép"]'); break;
-                case 'subject': cell=row.querySelector('td[data-label="Alany"]'); break;
-                case 'gps': cell=row.querySelector('td[data-label="GPS"]'); break;
+    const conditions = filter.split('&').map(c => c.trim()).filter(c => c);
+
+    rows.forEach(row => {
+        let visible = true;
+
+        for (let cond of conditions) {
+            let field = null, value = cond;
+            let exact = false;
+
+            const match = cond.match(/^(\w+)\s*:\s*(.+)$/);
+            if(match){
+                field = match[1].toLowerCase();
+                value = match[2].trim();
             }
+
+            // Pontos egyezés / idézőjel kezelés
+            if((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))){
+                exact = true;
+                value = value.slice(1, -1); // idézőjelek eltávolítása
+            }
+
+            let cell = null;
+            if(field){
+                switch(field){
+                    case 'file': cell = row.querySelector('td[data-label="Fájl"]'); break;
+                    case 'date': cell = row.querySelector('td[data-label="Dátum"]'); break;
+                    case 'creator': cell = row.querySelector('td[data-label="Alkotó"]'); break;
+                    case 'camera': cell = row.querySelector('td[data-label="Fényképezőgép"]'); break;
+                    case 'subject': cell = row.querySelector('td[data-label="Alany"]'); break;
+                    case 'gps': cell = row.querySelector('td[data-label="GPS"]'); break;
+                    case 'rating': cell = row.querySelector('td[data-label="Értékelés"]'); break;
+                }
+            }
+
+            let cellText = '';
             if(cell){
-                visible = cell.innerText.toLowerCase().includes(value);
+                cellText = (cell.dataset.rating !== undefined ? cell.dataset.rating : cell.innerText).toLowerCase();
             }
-        } else {
-            // normál keresés, ha nincs "kulcs: érték"
-            visible = row.innerText.toLowerCase().includes(filter);
+
+            const matchesValue = (txt) => {
+                const val = value.toLowerCase();
+
+                if(val.includes('*')){
+                    // A * bármilyen karakterláncot helyettesít bárhol a szövegben
+                    const regex = new RegExp('^' + val.split('*').map(s => s.replace(/[-\/\\^$+?.()|[\]{}]/g, '\\$&')).join('.*') + '$', 'i');
+                    return regex.test(txt);
+                } else {
+                    return exact ? txt === val : txt.includes(val);
+                }
+            }
+
+            // Rating és Date speciális kezelés
+            if(field && (field === 'rating' || field === 'date')){
+                const rangeMatch = value.match(/^(.+?)\#(.+)$/);
+                if(rangeMatch){
+                    let start = rangeMatch[1].trim();
+                    let end = rangeMatch[2].trim();
+                    if(field === 'rating'){
+                        const cellVal = parseInt(cellText);
+                        start = parseInt(start);
+                        end = parseInt(end);
+                        if(cellVal < start || cellVal > end){ visible=false; break; }
+                    } else if(field === 'date'){
+                        const cellDate = new Date(cell.innerText);
+                        const startDate = new Date(start);
+                        const endDate = new Date(end);
+                        if(cellDate < startDate || cellDate > endDate){ visible=false; break; }
+                    }
+                } else if(value.startsWith('>') || value.startsWith('<')){
+                    const operator = value[0];
+                    const v = value.slice(1).trim();
+                    if(field === 'rating'){
+                        const cellVal = parseInt(cellText);
+                        const cmpVal = parseInt(v);
+                        if(operator === '>' && cellVal <= cmpVal){ visible=false; break; }
+                        if(operator === '<' && cellVal >= cmpVal){ visible=false; break; }
+                    } else if(field === 'date'){
+                        const cellDate = new Date(cell.innerText);
+                        const cmpDate = new Date(v);
+                        if(operator === '>' && cellDate <= cmpDate){ visible=false; break; }
+                        if(operator === '<' && cellDate >= cmpDate){ visible=false; break; }
+                    }
+                } else {
+                    if(!matchesValue(cellText)){ visible=false; break; }
+                }
+            } else if(field){
+                // Field alapú keresés
+                if(!matchesValue(cellText)){ visible=false; break; }
+            } else {
+                // Paraméter nélküli keresés: minden cellában keresünk
+                const allCells = Array.from(row.querySelectorAll('td'));
+                visible = allCells.some(td => matchesValue(td.innerText.toLowerCase()));
+                if(!visible) break;
+            }
         }
-        row.classList.toggle('hidden',!visible);
+
+        row.classList.toggle('hidden', !visible);
     });
 });
+    
+// billentyűzet
+document.addEventListener('keydown', e => {
+    // ha éppen input vagy textarea van fókuszban → ne reagáljon
+    if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
+        return;
+    }
+    if (e.key.toLowerCase() === "l") { // 'l' - download.php
+        window.location.href = "download.php";
+    }
+    else if (e.key.toLowerCase() === "k") { // 'k' - slideshow.php
+        window.location.href = "slideshow.php";
+    }
+    else if (e.key === "Backspace") {
+        e.preventDefault(); // ne töröljön szöveget
+        history.back();     // menjen vissza az előző oldalra
+    }
+});
+
 </script>
+
 
 <footer style="margin-top:40px; text-align:center; font-size:0.9em; color:#666;">
     Server is powered by: 

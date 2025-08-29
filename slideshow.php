@@ -22,13 +22,26 @@ $images_json = json_encode(array_map(function($f){
             $personName = implode(', ', $iptc["2#025"]);
         }
     }
+    
+    $rating = null;
+    $xmpData = file_get_contents($f);
+    if (preg_match('/<\?xpacket.*?x:xmpmeta.*?>(.*?)<\/x:xmpmeta>/si', $xmpData, $matches)) {
+        $xmp = $matches[0];
+        if (preg_match('/xmp:Rating="(\d+)"/', $xmp, $ratingMatch)) {
+            $rating = (int)$ratingMatch[1]; // ide kerül az értékelés szám formában
+        }
+    }
+
 
     return [
-        'filename'=>$f,
-        'size'=>filesize($f),
-        'exif'=>$exifArray,
-        'person'=>$personName // <-- ide kerül az alany neve
-    ];
+    'filename' => $f,
+    'size' => filesize($f),
+    'exif' => $exifArray,
+    'person' => $personName,
+    'rating' => $rating,
+    'modified' => date("Y-m-d H:i:s", filemtime($f)) // Szerkesztés dátuma
+];
+
 }, $files));
 ?>
 <!DOCTYPE html>
@@ -119,6 +132,9 @@ button:hover{background:#555;}
     button{padding:8px 16px; margin:0 5px; font-size:18px;}
     #image-info{font-size:14px;}
     .gallery { display:flex; flex-wrap:wrap; justify-content:center; gap:30px; margin:20px auto; }
+    #info-details p {
+    font-size: 13px;
+    }
 }
 </style>
 </head>
@@ -308,8 +324,12 @@ function showInfo(){
     let html = `<p><strong>Album:</strong> ${parentDir}</p>`;
     html += `<p><strong>Fájlnév:</strong> ${img.filename}</p>`;
     html += `<p><strong>Készítés dátuma:</strong> ${date}</p>`;
+    let modifiedDate = img.modified || '—';
+    html += `<p><strong>Exportálás dátuma:</strong> ${modifiedDate}</p>`;
     html += `<p><strong>Alkotó:</strong> ${img.exif['Artist'] || '—'}</p>`;
     html += `<p><strong>Alany:</strong> ${person}</p>`;
+    let ratingNumber = img.rating !== null ? img.rating : '—';
+    html += `<p><strong>Értékelés:</strong> ${ratingNumber}</p>`;
     html += `<p><strong>Fényképezőgép:</strong> ${img.exif['Model'] || '—'}</p>`;
     html += `<p><strong>Objektív:</strong> ${img.exif['UndefinedTag:0xA434'] || '—'}</p>`;
     html += `<p><strong>Felbontás:</strong> ${(img.exif['COMPUTED']?.Width && img.exif['COMPUTED']?.Height) ? img.exif['COMPUTED'].Width + "×" + img.exif['COMPUTED'].Height : '—'}</p>`;
@@ -348,6 +368,9 @@ document.addEventListener('keydown', e => {
     }
     else if (e.key.toLowerCase() === "g") { // 'g' - galéria
         toggleGallery();
+    }
+    else if (e.key === "Backspace") {
+        history.back();     // menjen vissza az előző oldalra
     }
 });
 
