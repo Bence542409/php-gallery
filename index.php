@@ -177,9 +177,38 @@ tr.hidden{display:none;}
 <script>
 const searchInput=document.getElementById('search');
 searchInput.addEventListener('input',()=>{
-    const filter=searchInput.value.toLowerCase();
-    document.querySelectorAll('.file-row').forEach(row=>{
-        row.classList.toggle('hidden',!row.innerText.toLowerCase().includes(filter));
+    const filter=searchInput.value.trim().toLowerCase();
+    const rows=document.querySelectorAll('.file-row');
+
+    // Ha van "Kulcs: Érték" forma
+    let field=null, value=null;
+    const match=filter.match(/^(\w+)\s*:\s*(.+)$/);
+    if(match){
+        field=match[1];
+        value=match[2];
+    }
+
+    rows.forEach(row=>{
+        let visible=true;
+        if(field && value){
+            // keresés adott oszlopban
+            let cell=null;
+            switch(field){
+                case 'file': cell=row.querySelector('td[data-label="Fájl"]'); break;
+                case 'date': cell=row.querySelector('td[data-label="Dátum"]'); break;
+                case 'creator': cell=row.querySelector('td[data-label="Alkotó"]'); break;
+                case 'camera': cell=row.querySelector('td[data-label="Fényképezőgép"]'); break;
+                case 'subject': cell=row.querySelector('td[data-label="Alany"]'); break;
+                case 'gps': cell=row.querySelector('td[data-label="GPS"]'); break;
+            }
+            if(cell){
+                visible = cell.innerText.toLowerCase().includes(value);
+            }
+        } else {
+            // normál keresés, ha nincs "kulcs: érték"
+            visible = row.innerText.toLowerCase().includes(filter);
+        }
+        row.classList.toggle('hidden',!visible);
     });
 });
 </script>
