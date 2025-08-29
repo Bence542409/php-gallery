@@ -9,7 +9,7 @@
 <ul>
   <li>lists .jpg and .mp4 files from your directory with EXIF data (if available)</li>
   <li>reads the name of the parent directory</li>
-  <li>search option</li>
+  <li>search option (including search parameters: 'file:' & 'date:' # 'creator:' & 'camera:' & 'subject:' & 'gps:'</li>
   <li>download button to make a .zip archive of your directory</li>
   <li>slideshow button</li>
 </ul>
