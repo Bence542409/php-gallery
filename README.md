@@ -7,13 +7,13 @@
 <br />
 <p>Search parameters:</p>
 <ul>
-  <li>file: - filtering by filename</li>
-  <li>date: - filtering by date</li>
-  <li>creator: - filtering by creator name</li>
-  <li>camera: - filtering by camera model</li>
-  <li>subject: - filtering by subject name</li>
-  <li>gps: - filtering by GPS coordinates</li>
-  <li>rating: - filtering by picture ratings</li>
+  <li>file: - filter by filename</li>
+  <li>date: - filter by date</li>
+  <li>creator: - filter by creator name</li>
+  <li>camera: - filter by camera model</li>
+  <li>subject: - filter by subject name</li>
+  <li>gps: - filter by GPS coordinates</li>
+  <li>rating: - filter by picture ratings</li>
   <li>& - connect several parameters</li>
   <li>"" - search for exact match</li>
   <li>* - wildcard</li>
