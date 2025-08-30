@@ -1,5 +1,5 @@
 # php-gallery
-<p>Responsive PHP Gallery with directory listing and slideshow for photographers.</p>
+<p>Responsive PHP Gallery with directory listing and slideshow for photographers using Lightroom.</p>
 <br />
 <p>Built by me and ChatGPT.</p>
 <p>The files are in Hungarian, but you can change it as you like.</p>
