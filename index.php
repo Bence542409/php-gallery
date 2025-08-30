@@ -115,7 +115,7 @@ tr.hidden{display:none;}
 </div>
 
 <div class="controls">
-    <a href="download.php" target="_blank">Letöltés</a>
+    <a href="#" id="downloadBtn">Letöltés</a>
     <a href="slideshow.php">Képnézegető</a>
     <input type="text" id="search" placeholder="Keresés...">
 </div>
@@ -156,15 +156,19 @@ if ($exifAvailable){
     // Fényképezőgép (marad eredeti)
     $camera = $exif['Model'] ?? '&mdash;';
 
-    // XMP Rating kiolvasása
-        $xmpData = file_get_contents($file);
-        if (preg_match('/<\?xpacket.*?x:xmpmeta.*?>(.*?)<\/x:xmpmeta>/si', $xmpData, $matches)) {
-            $xmp = $matches[0];
-            if (preg_match('/xmp:Rating="(\d+)"/', $xmp, $ratingMatch)) {
-                $rating = (int)$ratingMatch[1];
-                $ratingStar = str_repeat('★', $rating);
-            }
+    // XMP Rating gyorsított kiolvasása (csak a fájl elejéből)
+    $handle = fopen($file, 'rb');
+    $header = fread($handle, 262144); // 256 KB
+    fclose($handle);
+
+    if (preg_match('/<\?xpacket.*?x:xmpmeta.*?>(.*?)<\/x:xmpmeta>/si', $header, $matches)) {
+        $xmp = $matches[0];
+        if (preg_match('/xmp:Rating="(\d+)"/', $xmp, $ratingMatch)) {
+            $rating = (int)$ratingMatch[1];
+            $ratingStar = str_repeat('★', $rating);
         }
+    }
+
     
     if (isset($rating) && $rating !== '&mdash;') {
     $filled = (int)$rating;
@@ -197,7 +201,19 @@ if ($exifAvailable){
 
 ?>
 <tr class="file-row">
-    <td data-label="Fájl"><a href="<?= htmlspecialchars($file) ?>" target="_blank" class="file-link"><?= htmlspecialchars($file) ?></a></td>
+    <td data-label="Fájl">
+    <?php if (preg_match('/\.jpg$/i', $file)): ?>
+        <!-- .jpg → slideshow.php -->
+        <a href="slideshow.php?file=<?= urlencode($file) ?>" class="file-link" target="_blank">
+            <?= htmlspecialchars($file) ?>
+        </a>
+    <?php else: ?>
+        <!-- más fájlok (.mp4) → közvetlen link -->
+        <a href="<?= urlencode($file) ?>" class="file-link" target="_blank">
+            <?= htmlspecialchars($file) ?>
+        </a>
+    <?php endif; ?>
+</td>
     <td data-label="Dátum"><?= $date ?></td>
     <td data-label="Alkotó"><?= $artist ?></td>
     <td data-label="Fényképezőgép"><?= $camera ?></td>
@@ -210,6 +226,26 @@ if ($exifAvailable){
 </table>
 
 <script>
+    
+    
+const downloadBtn = document.getElementById('downloadBtn');
+
+downloadBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+
+    const visibleFiles = Array.from(document.querySelectorAll('.file-row:not(.hidden) td[data-label="Fájl"] a.file-link'))
+                              .map(a => encodeURIComponent(a.textContent.trim()));
+
+    if(visibleFiles.length === 0){
+        alert('Nincsenek letölthető fájlok a keresés alapján.');
+        return;
+    }
+
+    const url = 'download.php?files=' + visibleFiles.join(',');
+    window.open(url, '_blank'); // új lapon nyitja meg
+});
+
+    
 const searchInput = document.getElementById('search');
 
 searchInput.addEventListener('input', () => {
@@ -322,9 +358,21 @@ document.addEventListener('keydown', e => {
     if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
         return;
     }
-    if (e.key.toLowerCase() === "l") { // 'l' - download.php
-        window.location.href = "download.php";
+    else if (e.key.toLowerCase() === "l") { // 'l' - letöltés új lapon
+    e.preventDefault();
+
+    const visibleFiles = Array.from(document.querySelectorAll('.file-row:not(.hidden) td[data-label="Fájl"] a.file-link'))
+                              .map(a => encodeURIComponent(a.textContent.trim()))
+
+    if(visibleFiles.length === 0){
+        alert('Nincsenek letölthető fájlok a keresés alapján!');
+        return;
     }
+
+    const url = 'download.php?files=' + visibleFiles.join(',');
+    window.open(url, '_blank'); // új lapon nyitja meg
+}
+
     else if (e.key.toLowerCase() === "k") { // 'k' - slideshow.php
         window.location.href = "slideshow.php";
     }

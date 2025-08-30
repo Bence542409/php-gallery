@@ -4,6 +4,14 @@ natcasesort($files);
 $files = array_values($files);
 $title = basename(dirname(__DIR__));
 
+// Megkeressük a ?file= paramétert
+$selectedFile = isset($_GET['file']) ? $_GET['file'] : null;
+$selectedIndex = 0;
+if ($selectedFile !== null) {
+    $pos = array_search($selectedFile, $files);
+    if ($pos !== false) $selectedIndex = $pos;
+}
+
 $images_json = json_encode(array_map(function($f){
     $exifData = @exif_read_data($f,'IFD0,EXIF,GPS');
     $exifArray = [];
@@ -24,13 +32,20 @@ $images_json = json_encode(array_map(function($f){
     }
     
     $rating = null;
-    $xmpData = file_get_contents($f);
-    if (preg_match('/<\?xpacket.*?x:xmpmeta.*?>(.*?)<\/x:xmpmeta>/si', $xmpData, $matches)) {
-        $xmp = $matches[0];
-        if (preg_match('/xmp:Rating="(\d+)"/', $xmp, $ratingMatch)) {
-            $rating = (int)$ratingMatch[1]; // ide kerül az értékelés szám formában
+    // Csak a fájl elejének beolvasása (64 KB)
+    $handle = fopen($f, 'rb');
+    if ($handle) {
+        $header = fread($handle, 262144); // 256 KB
+        fclose($handle);
+
+        if (preg_match('/<\?xpacket.*?x:xmpmeta.*?>(.*?)<\/x:xmpmeta>/si', $header, $matches)) {
+            $xmp = $matches[0];
+            if (preg_match('/xmp:Rating="(\d+)"/', $xmp, $ratingMatch)) {
+                $rating = (int)$ratingMatch[1]; // értékelés szám formában
+            }
         }
     }
+
 
 
     return [
@@ -168,6 +183,8 @@ button:hover{background:#555;}
 
 <script>
     
+let index = <?= $selectedIndex ?>;
+    
 function getGps(coord, hemi){
     function gps2Num(coordPart){
         const parts = coordPart.split('/');
@@ -184,7 +201,6 @@ function getGps(coord, hemi){
     
 const images = <?=$images_json?>;
 const BATCH_SIZE = 50;
-let index=0,
     slideshow=document.getElementById("slideshow"),
     imageInfo=document.getElementById("image-info"),
     downloadBtn=document.getElementById("download-btn"),

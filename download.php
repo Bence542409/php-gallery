@@ -1,7 +1,18 @@
 <?php
-$files = array_diff(scandir(__DIR__), [basename(__FILE__), '.', '..']);
-$files = array_filter($files, fn($f) => is_file($f) && preg_match('/\.(jpg|mp4)$/i', $f));
+if(isset($_GET['files'])){
+    $filesParam = $_GET['files']; // pl. file1.jpg,file2.mp4
+    $files = array_map('urldecode', explode(',', $filesParam));
+    // csak ellenőrzött fájlok, hogy ne legyen kódbefecskendezés
+    $files = array_filter($files, fn($f) => is_file($f) && preg_match('/\.(jpg|mp4)$/i', $f));
+} else {
+    $files = []; // ha nincs fájl
+}
+
+if(empty($files)){
+    exit("Nincsenek letölthető fájlok.");
+}
 sort($files, SORT_NATURAL | SORT_FLAG_CASE);
+
 
 // ZIP letöltés kérése
 if(isset($_GET['download'])){
@@ -68,7 +79,9 @@ button:hover{background:#0056b3;}
 <script>
 // Letöltés indítása
 window.onload = () => {
-    window.location.href = '?download=1';
+    const params = new URLSearchParams(window.location.search);
+    params.set('download', '1');
+    window.location.href = 'download.php?' + params.toString();
 };
 </script>
 </body>
