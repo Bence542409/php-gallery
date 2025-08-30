@@ -27,6 +27,7 @@
   <li>lists .jpg and .mp4 files from your directory with EXIF data (if available)</li>
   <li>reads the name of the parent directory</li>
   <li>search option (including search parameters)</li>
+  <li>opens .jpg files in slideshow view</li>
   <li>press 'L' or the download button to make a .zip archive of your directory</li>
   <li>press 'K' or the slideshow button to view your pictues in a gallery</li>
   <li>press the "backspace" button to go to the previous page</li>
@@ -43,5 +44,5 @@
 </ul>
 <p>download.php --></p>
 <ul>
-  <li>converts the .jpg and .mp4 files from your directory to a .zip archive and downloads it</li>
+  <li>converts the .jpg and .mp4 files from your directory to a .zip archive and downloads it (only files that are resulted in search)</li>
 </ul>
