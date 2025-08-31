@@ -30,7 +30,10 @@
   <li>opens .jpg files in slideshow view</li>
   <li>press 'L' or the download button to make a .zip archive of your directory</li>
   <li>press 'K' or the slideshow button to view your pictues in a gallery</li>
-  <li>press the "backspace" button to go to the previous page</li>
+  <li>press the "backspace" key to go to the previous page</li>
+  <li>press the "enter" key to focus the search input</li>
+  <li>press the "esc" key to defocus the search input</li>
+  <li>press the "tab" key to reset the search input</li>
 </ul>
 <p>slideshow.php --></p>
 <ul>
@@ -40,9 +43,10 @@
   <li>press 'L' or the button to download the current image</li>
   <li>press 'G' or the button to reveal the gallery</li>
   <li>press 'I' or the image to reveal the EXIF info</li>
-  <li>press the "backspace" button to go to the previous page</li>
+  <li>press the "backspace" key to go to the previous page</li>
 </ul>
 <p>download.php --></p>
 <ul>
   <li>converts the .jpg and .mp4 files from your directory to a .zip archive and downloads it (only files that are resulted in search)</li>
+  <li>press the "backspace" key to close the page</li>
 </ul>
