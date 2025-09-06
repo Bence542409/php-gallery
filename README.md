@@ -14,7 +14,7 @@
   <li>subject: - filter by subject name</li>
   <li>gps: - filter by GPS coordinates</li>
   <li>rating: - filter by picture ratings</li>
-  <li>& - connect several parameters</li>
+  <li>& - join several parameters</li>
   <li>"" - search for exact match</li>
   <li>* - wildcard</li>
   <li># - between (only in date and rating column)</li>
