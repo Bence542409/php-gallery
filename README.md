@@ -50,3 +50,4 @@
   <li>converts the .jpg and .mp4 files from your directory to a .zip archive and downloads it (only files that are resulted in search)</li>
   <li>press the "backspace" key to close the page</li>
 </ul>
+<p>The gallery system works with my <a href="https://github.com/Bence542409/php-fileserver">fileserver system</a></p>
