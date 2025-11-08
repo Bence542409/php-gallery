@@ -51,4 +51,4 @@
   <li>press the "backspace" key to close the page</li>
 </ul>
 <br />
-<p>The gallery system works with my <a href="https://github.com/Bence542409/php-fileserver">fileserver system</a></p>
+<p>The gallery system works with my <a href="https://github.com/Bence542409/php-fileserver">fileserver system</a>.</p>
