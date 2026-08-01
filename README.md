@@ -2,7 +2,9 @@
 <p>Responsive PHP Gallery with directory listing and slideshow for photographers using Lightroom.</p>
 <br />
 <p>Built by me and ChatGPT.</p>
-<p>The files are in Hungarian, but you can change it as you like.</p>
+<p>In order to succesfully display your albums, the pictures have to be in a subfolder called "colored" inside your album folder.</p>
+<p>The files are in Hungarian.</p>
+<p>The gallery system works with my <a href="https://github.com/Bence542409/php-fileserver">fileserver system</a>.</p>
 <p>If PHP is not yet installed on your web server: <a href="https://www.php.net/downloads.php" target="_blank">https://www.php.net/downloads.php</a></p>
 <br />
 <p>Search parameters:</p>
@@ -51,4 +53,3 @@
   <li>press the "backspace" key to close the page</li>
 </ul>
 <br />
-<p>The gallery system works with my <a href="https://github.com/Bence542409/php-fileserver">fileserver system</a>.</p>
