@@ -1,4 +1,4 @@
-# php-gallery
+# php-localgallery
 <p>Responsive PHP Gallery with directory listing and slideshow for photographers using Lightroom.</p>
 <br />
 <p>Built by me and ChatGPT.</p>
